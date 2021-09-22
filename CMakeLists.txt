@@ -11,3 +11,7 @@ set(Public ${PROJECT_SOURCE_DIR}/include/thread_pool.h)
 add_executable(thread_pool main.cpp ${Private} ${Public})
 
 target_include_directories( thread_pool PUBLIC include )
+
+target_link_libraries( thread_pool pthread)
+
+

@@ -1,4 +1,5 @@
 #include <thread_pool.h>
+#include <iostream>
 
 namespace abstract { namespace from { namespace thread {
 
@@ -27,7 +28,7 @@ bool ThreadPool::start(const size_t &threads_amount)
     m_threads.reserve(threads_amount);
     for (size_t i = 0; i < m_threads.size(); i++)
     {
-        m_threads.emplace_back(std::thread(Worker(*this, i)));
+		m_threads.emplace_back(std::thread(Worker(*this, i)));
     }
     return true;
 }
@@ -43,6 +44,7 @@ ThreadPool::Worker::Worker(ThreadPool &pool, const int id)
 
 void ThreadPool::Worker::operator()()
 {
+	std::cout << "Worker with id " << m_id << " begin to work" << std::endl;
     std::function<void()> func;
     bool success = false;
     while(!m_pool.m_stoped){
@@ -50,34 +52,16 @@ void ThreadPool::Worker::operator()()
         if (m_pool.m_operations.empty()){
             m_pool.m_cv.wait(lock);
         }
-        func = m_pool.m_operations.pop().function;
-        func();
+		m_pool.m_operations.pop().function();
     }
 }
 
-template<class T, class Container, class Compare>
-void ThreadSafePriorityQueue<T, Container, Compare>::push(const T &value)
-{
-    std::lock_guard<std::mutex> lock(m_sync);
-    m_notSafeQueue.push(value);
-}
-
-template<class T, class Container, class Compare>
-T ThreadSafePriorityQueue<T, Container, Compare>::pop()
-{
-    std::lock_guard<std::mutex> lock(m_sync);
-    auto value = m_notSafeQueue.top();
-    m_notSafeQueue.pop();
-    return value;
-}
-
-template<class T, class Container, class Compare>
-bool ThreadSafePriorityQueue<T, Container, Compare>::empty() const
-{
-    std::lock_guard<std::mutex> lock(m_sync);
-    return m_notSafeQueue.empty();
+std::ostream &reader(){
+	static std::mutex cout_mutex;
+	std::lock_guard<std::mutex> lock(cout_mutex);
+	return std::cout;
 }
 
 }
-}
-}
+									}
+				   }

@@ -11,6 +11,8 @@
 
 namespace abstract { namespace from { namespace thread {
 
+std::ostream& reader();
+
 template<class T,
          class Container = std::vector<T>,
          class Compare = std::less<typename Container::value_type>>
@@ -18,9 +20,23 @@ class ThreadSafePriorityQueue
 {
 public:
     typedef typename Container::const_reference const_reference;
-    void push(const T& value);
-    T pop();
-    bool empty() const;
+	void push(const T& value)
+	{
+		std::lock_guard<std::mutex> lock(m_sync);
+		m_notSafeQueue.push(value);
+	}
+	T pop()
+	{
+		std::lock_guard<std::mutex> lock(m_sync);
+		auto value = m_notSafeQueue.top();
+		m_notSafeQueue.pop();
+		return value;
+	}
+	bool empty() const
+	{
+		std::lock_guard<std::mutex> lock(m_sync);
+		return m_notSafeQueue.empty();
+	}
 private:
     std::priority_queue<T, Container, Compare> m_notSafeQueue;
     mutable std::mutex m_sync;
@@ -55,10 +71,10 @@ public:
     template<typename Callable, typename ...Args>
     auto submit(const int32_t priority,
                 Callable&& f,
-                Args&&... args) -> std::future<decltype(f(args...))>
+				Args&&... args) -> std::shared_ptr<std::packaged_task<decltype (f(args...))()>>
     {
         auto func = std::bind(std::forward<Callable>(f), std::forward<Args>(args)...);
-        auto task_ptr = std::make_shared<std::packaged_task<decltype(func)()>>(func);
+		auto task_ptr = std::make_shared<std::packaged_task<decltype(f(args...))()>>(func);
 
         std::function<void()> wrapper_func = [task_ptr]()
         {
@@ -69,7 +85,7 @@ public:
 
         m_cv.notify_one();
 
-        return task_ptr->get_future();
+		return task_ptr;
     }
 private:
     ThreadSafePriorityQueue<Operation> m_operations;

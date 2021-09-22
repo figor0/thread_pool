@@ -2,50 +2,60 @@
 #include <thread_pool.h>
 #include <string>
 #include <vector>
+#include <sstream>
 
 namespace aft = abstract::from::thread;
 
-class ISubmiter
+int64_t findBiggerDelimeter(const int64_t value)
 {
-public:
-    virtual bool prepare(const std::string& description) = 0;
-    virtual void submit() = 0;
-};
+	int64_t result = 100;
+	std::cout << result << std::endl;
+	return result;
+}
 
-class ThreadPoolSubmiter: public ISubmiter
+
+void printDelimeter(std::shared_ptr<std::packaged_task<int64_t ()>> task_ptr)
 {
-public:
-    ThreadPoolSubmiter(std::weak_ptr<aft::ThreadPool> thread_pool_sptr)
-        :
-    {
-
-    }
-private:
-    std::shared_ptr<aft::ThreadPool>
-};
-
-class SimpleDelimeter: public ISubmiter
-{
-public:
-    bool prepare(const std::string& description)
-    {
-
-    }
-};
-
-class SubmitersFactory
-{
-public:
-    bool registrate();
-private:
-};
-
-void initEnvironment()
-{
-
+	std::cout << task_ptr->get_future().get() << '\n';
 }
 
 int main()
 {
+	aft::ThreadPool thread_pool;
+	thread_pool.start(1);
+	std::string command;
+	bool stopeable = false;
+	bool restrtable = true;
+	size_t current_size = 1;
+
+	std::future<std::future<int64_t>> future;
+	while(true)
+	{
+		std::cout << "Input command" << std::endl;
+		std::getline( std::cin, command);
+		std::cout << "Command " + command << std::endl;
+		if (command == "exit"){
+			stopeable = true;
+			restrtable = true;
+		} else if (command == "restart"){
+			stopeable = true;
+		} else {
+			std::istringstream reader(command);
+			int64_t value = 0;
+			int32_t priority = 0;
+
+			reader >> value >> priority;
+
+			if (!reader.fail())
+			{
+				auto result = thread_pool.submit(priority,
+												 findBiggerDelimeter,
+												 value);
+				thread_pool.submit(priority, printDelimeter, result);
+			} else {
+				std::cout << "read data from cin failed" << std::endl;
+			}
+		}
+	}
     return 0;
 }
