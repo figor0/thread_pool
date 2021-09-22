@@ -11,7 +11,7 @@
 
 namespace abstract { namespace from { namespace thread {
 
-std::ostream& reader();
+void print(std::ostream& printer, const std::string& message);
 
 template<class T,
          class Container = std::vector<T>,
