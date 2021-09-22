@@ -18,15 +18,16 @@ void ThreadPool::stop(){
         if (thread.joinable())
             thread.join();
     }
+	m_threads.clear();
 }
 
 bool ThreadPool::start(const size_t &threads_amount)
 {
-    if (threads_amount == 0 )
+	if (threads_amount == 0 || m_threads.size() != 0)
         return false;
 
     m_threads.reserve(threads_amount);
-    for (size_t i = 0; i < m_threads.size(); i++)
+	for (size_t i = 0; i < threads_amount; i++)
     {
 		m_threads.emplace_back(std::thread(Worker(*this, i)));
     }
@@ -52,8 +53,12 @@ void ThreadPool::Worker::operator()()
         if (m_pool.m_operations.empty()){
             m_pool.m_cv.wait(lock);
         }
-		m_pool.m_operations.pop().function();
+		if (m_pool.m_stoped)
+			break;
+		if (!m_pool.m_operations.empty())
+			m_pool.m_operations.pop().function();
     }
+	std::cout << "Worker with id " << m_id << " end" << std::endl;
 }
 
 std::ostream &reader(){

@@ -9,7 +9,6 @@ namespace aft = abstract::from::thread;
 int64_t findBiggerDelimeter(const int64_t value)
 {
 	int64_t result = 100;
-	std::cout << result << std::endl;
 	return result;
 }
 
@@ -36,9 +35,10 @@ int main()
 		std::cout << "Command " + command << std::endl;
 		if (command == "exit"){
 			stopeable = true;
-			restrtable = true;
+			restrtable = false;
 		} else if (command == "restart"){
 			stopeable = true;
+			restrtable = true;
 		} else {
 			std::istringstream reader(command);
 			int64_t value = 0;
@@ -55,6 +55,15 @@ int main()
 			} else {
 				std::cout << "read data from cin failed" << std::endl;
 			}
+		}
+		if (stopeable){
+			current_size = thread_pool.size();
+			thread_pool.stop();
+		}
+		if ( restrtable ) {
+			thread_pool.start(current_size*2);
+		} else if (stopeable){
+			break;
 		}
 	}
     return 0;
