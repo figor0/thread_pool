@@ -25,6 +25,7 @@ std::vector<unsigned> calculateSimpleNumbers(const unsigned limit)
 
 unsigned findBiggerDelimeter(const unsigned value)
 {
+    aft::print(std::cout, std::to_string(value));
     unsigned result = 1;
     auto simple_numbers = calculateSimpleNumbers(value);
     for (const auto sim_number: simple_numbers)
@@ -103,6 +104,8 @@ public:
 
 int main()
 {
+    std::cout << std::numeric_limits<unsigned int>::max() << std::endl;
+    std::cout << std::numeric_limits<unsigned int>::min() << std::endl;
     Application app;
     return app.run();
 }
