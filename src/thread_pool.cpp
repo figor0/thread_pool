@@ -47,19 +47,22 @@ ThreadPool::Worker::Worker(ThreadPool &pool, const int id)
 void ThreadPool::Worker::operator()()
 {
     std::string begin_message = "Worker with id " + std::to_string(m_id) + " begin to work";
+    std::string end_message = "Worker with id " + std::to_string(m_id) + " end work";
     print(std::cout, begin_message);
     std::function<void()> func;
     bool success = false;
     while(!m_pool.m_stoped){
-        std::unique_lock<std::mutex> lock(m_pool.m_conditional_sync);
-
-        std::string msg_start_task = "Worker " + std::to_string(m_id) + "begin task";
-        std::string msg_end_task = "Worker " + std::to_string(m_id) + "end task";
-
-        if (m_pool.m_operations.empty()){
-            m_pool.m_cv.wait(lock);
+        {
+            std::unique_lock<std::mutex> lock(m_pool.m_conditional_sync);
+            if (m_pool.m_operations.empty()){
+                m_pool.m_cv.wait(lock, [this]
+                {
+                    return !m_pool.m_operations.empty() || m_pool.m_stoped;
+                });
+            }
         }
-
+        std::string msg_start_task = "Worker " + std::to_string(m_id) + " begin task";
+        std::string msg_end_task = "Worker " + std::to_string(m_id) + " end task";
 		if (m_pool.m_stoped)
 			break;
         if (!m_pool.m_operations.empty()){
@@ -68,6 +71,7 @@ void ThreadPool::Worker::operator()()
             print(std::cout, msg_end_task);
         }
     }
+    print(std::cout, end_message);
 }
 
 void print(std::ostream& printer, const std::string& message){

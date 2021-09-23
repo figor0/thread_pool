@@ -8,6 +8,7 @@
 #include <functional>
 #include <mutex>
 #include <future>
+#include <iostream>
 
 namespace abstract { namespace from { namespace thread {
 
@@ -73,6 +74,7 @@ public:
                 Callable&& f,
 				Args&&... args) -> std::shared_ptr<std::packaged_task<decltype (f(args...))()>>
     {
+        print(std::cout, "submit message begin");
         auto func = std::bind(std::forward<Callable>(f), std::forward<Args>(args)...);
 		auto task_ptr = std::make_shared<std::packaged_task<decltype(f(args...))()>>(func);
 
@@ -82,7 +84,7 @@ public:
         };
 
         m_operations.push({priority, wrapper_func});
-
+        print(std::cout, "submit message notify");
         m_cv.notify_one();
 
 		return task_ptr;
