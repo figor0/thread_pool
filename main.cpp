@@ -39,7 +39,7 @@ unsigned findBiggerDelimeter(const unsigned value)
 
 void printDelimeter(std::shared_ptr<std::packaged_task<unsigned ()>> task_ptr)
 {
-	std::cout << task_ptr->get_future().get() << '\n';
+    aft::print(std::cout, std::to_string(task_ptr->get_future().get()));
 }
 
 
